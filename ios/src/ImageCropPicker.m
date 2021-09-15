@@ -71,7 +71,8 @@ RCT_EXPORT_MODULE();
             @"forceJpg": @NO,
             @"sortOrder": @"none",
             @"cropperCancelText": @"Cancel",
-            @"cropperChooseText": @"Choose"
+            @"cropperChooseText": @"Choose",
+            @"showIgCropper": @NO,
         };
         self.compression = [[Compression alloc] init];
     }
@@ -868,34 +869,47 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
 #pragma mark - TOCCropViewController Implementation
 - (void)cropImage:(UIImage *)image {
     dispatch_async(dispatch_get_main_queue(), ^{
-        TOCropViewController *cropVC;
-        if ([[[self options] objectForKey:@"cropperCircleOverlay"] boolValue]) {
-            cropVC = [[TOCropViewController alloc] initWithCroppingStyle:TOCropViewCroppingStyleCircular image:image];
+        
+        if ([[[self options] objectForKey:@"showIgCropper"] boolValue]) {
+            IGCropViewController *cropVC = [[IGCropViewController alloc] initWithImage:image minimumPortraitZoomScale:4/5 minimumLandScapeZoomScale:1/1.91];
+            cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
+            cropVC.delegate = self;
+
+            cropVC.doneButtonTitle = [self.options objectForKey:@"cropperChooseText"];
+            cropVC.cancelButtonTitle = [self.options objectForKey:@"cropperCancelText"];
+            [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
         } else {
-            cropVC = [[TOCropViewController alloc] initWithImage:image];
-            CGFloat widthRatio = [[self.options objectForKey:@"width"] floatValue];
-            CGFloat heightRatio = [[self.options objectForKey:@"height"] floatValue];
-            if (widthRatio > 0 && heightRatio > 0){
-                CGSize aspectRatio = CGSizeMake(widthRatio, heightRatio);
-                cropVC.customAspectRatio = aspectRatio;
-                
+            
+            TOCropViewController *cropVC;
+            if ([[[self options] objectForKey:@"cropperCircleOverlay"] boolValue]) {
+                cropVC = [[TOCropViewController alloc] initWithCroppingStyle:TOCropViewCroppingStyleCircular image:image];
+            } else {
+                cropVC = [[TOCropViewController alloc] initWithImage:image];
+                CGFloat widthRatio = [[self.options objectForKey:@"width"] floatValue];
+                CGFloat heightRatio = [[self.options objectForKey:@"height"] floatValue];
+                if (widthRatio > 0 && heightRatio > 0){
+                    CGSize aspectRatio = CGSizeMake(widthRatio, heightRatio);
+                    cropVC.customAspectRatio = aspectRatio;
+
+                }
+                cropVC.aspectRatioLockEnabled = ![[self.options objectForKey:@"freeStyleCropEnabled"] boolValue];
+                cropVC.resetAspectRatioEnabled = !cropVC.aspectRatioLockEnabled;
             }
-            cropVC.aspectRatioLockEnabled = ![[self.options objectForKey:@"freeStyleCropEnabled"] boolValue];
-            cropVC.resetAspectRatioEnabled = !cropVC.aspectRatioLockEnabled;
+
+            cropVC.title = [[self options] objectForKey:@"cropperToolbarTitle"];
+            cropVC.delegate = self;
+
+            cropVC.doneButtonTitle = [self.options objectForKey:@"cropperChooseText"];
+            cropVC.cancelButtonTitle = [self.options objectForKey:@"cropperCancelText"];
+
+            cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
+
+            [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
         }
-        
-        cropVC.title = [[self options] objectForKey:@"cropperToolbarTitle"];
-        cropVC.delegate = self;
-        
-        cropVC.doneButtonTitle = [self.options objectForKey:@"cropperChooseText"];
-        cropVC.cancelButtonTitle = [self.options objectForKey:@"cropperCancelText"];
-        
-        cropVC.modalPresentationStyle = UIModalPresentationFullScreen;\
-        
-        [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
+    
     });
 }
-#pragma mark - TOCropViewController Delegate
+#pragma mark - TOCropViewController and IGCropViewController Delegate
 - (void)cropViewController:(TOCropViewController *)cropViewController didCropToImage:(UIImage *)image withRect:(CGRect)cropRect angle:(NSInteger)angle {
     [self imageCropViewController:cropViewController didCropImage:image usingCropRect:cropRect];
 }
@@ -908,4 +922,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     }]];
 }
 
+- (void)cropViewController:(IGCropViewController *)cropViewController didCropToImage:(UIImage *)image withRect:(CGRect)cropRect {
+    [self imageCropViewController:cropViewController didCropImage:image usingCropRect:cropRect];
+}
 @end

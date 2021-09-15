@@ -37,6 +37,7 @@
 
 
 #import <TOCropViewController/TOCropViewController.h>
+#import <IGImageCropper/IGCropViewController.h>
 
 #import "UIImage+Resize.h"
 #import "UIImage+Extension.h"
@@ -48,7 +49,8 @@ UIImagePickerControllerDelegate,
 UINavigationControllerDelegate,
 RCTBridgeModule,
 QBImagePickerControllerDelegate,
-TOCropViewControllerDelegate>
+TOCropViewControllerDelegate,
+IGCropViewControllerDelegate>
 
 typedef enum selectionMode {
     CAMERA,

@@ -316,6 +316,13 @@ declare module "react-native-image-crop-picker" {
          * @default Android: 1, iOS: 0.8
          */
         compressImageQuality?: number;
+
+        /**
+         * Show instagram like crop switch
+         *
+         * @default false
+         */
+        showIgCropper?: boolean;
     }
 
     type CropperOptions = ImageOptions & {
