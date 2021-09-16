@@ -871,7 +871,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     dispatch_async(dispatch_get_main_queue(), ^{
         
         if ([[[self options] objectForKey:@"showIgCropper"] boolValue]) {
-            IGCropViewController *cropVC = [[IGCropViewController alloc] initWithImage:image minimumPortraitZoomScale:4/5 minimumLandScapeZoomScale:1/1.91];
+            IGCropViewController *vc = [[IGCropViewController alloc] initWithImage:im minimumPortraitWidth:277 minimumLandScapeHeight:197];
             cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
             cropVC.delegate = self;
 
