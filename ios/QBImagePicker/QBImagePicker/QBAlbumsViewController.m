@@ -37,6 +37,8 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
 
 @implementation QBAlbumsViewController
 
+#pragma mark - Life cycle
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
