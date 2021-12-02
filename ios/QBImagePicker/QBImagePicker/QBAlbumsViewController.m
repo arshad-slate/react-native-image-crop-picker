@@ -8,6 +8,7 @@
 
 #import "QBAlbumsViewController.h"
 #import <Photos/Photos.h>
+#import <PhotosUI/PhotosUI.h>
 
 // Views
 #import "QBAlbumCell.h"
@@ -38,6 +39,7 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
 @implementation QBAlbumsViewController
 
 #pragma mark - Life cycle
+
 
 - (void)viewDidLoad
 {
