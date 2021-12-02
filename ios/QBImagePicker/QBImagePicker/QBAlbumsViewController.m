@@ -21,15 +21,18 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     return CGSizeMake(size.width * scale, size.height * scale);
 }
 
+static NSString *kLimitedPhotoAccessURL = @"limited-photo-access";
+
 @interface QBImagePickerController (Private)
 
 @property (nonatomic, strong) NSBundle *assetBundle;
 
 @end
 
-@interface QBAlbumsViewController () <PHPhotoLibraryChangeObserver>
+@interface QBAlbumsViewController () <PHPhotoLibraryChangeObserver, UITextViewDelegate>
 
 @property (nonatomic, strong) IBOutlet UIBarButtonItem *doneButton;
+@property (weak, nonatomic) IBOutlet UITextView *limitedPhotoAccesTextView;
 
 @property (nonatomic, copy) NSArray *fetchResults;
 @property (nonatomic, copy) NSArray *assetCollections;
@@ -75,6 +78,7 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     
     [self updateControlState];
     [self updateSelectionInfo];
+    [self configureLimitedAccessPermissionBanner];
 }
 
 - (void)dealloc
@@ -150,6 +154,31 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     }
 }
 
+- (void) configureLimitedAccessPermissionBanner
+{
+    if (@available(iOS 14.0, *)) {
+            PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatusForAccessLevel: PHAccessLevelReadWrite];
+            if (status == PHAuthorizationStatusLimited) {
+                NSString *str = @"You’ve given ARC app access to only a select number of photos. Manage";
+                
+                NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:str];
+                
+                NSRange foundRange = NSMakeRange(0, str.length-1);
+                [attributedString addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"Helvetica" size:14] range:foundRange];
+
+                foundRange = [[attributedString mutableString] rangeOfString:@"Manage"];
+                [attributedString addAttribute:NSLinkAttributeName value:kLimitedPhotoAccessURL range:foundRange];
+                [attributedString addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"Helvetica-Bold" size:14] range:foundRange];
+                [attributedString addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:0 green:122.0/255.0 blue:1 alpha:1] range:foundRange];
+                _limitedPhotoAccesTextView.attributedText = attributedString;
+                _limitedPhotoAccesTextView.delegate = self;
+            } else {
+                self.tableView.tableHeaderView = NULL;
+            }
+    } else {
+        self.tableView.tableHeaderView = NULL;
+    }
+}
 
 #pragma mark - Fetching Asset Collections
 
@@ -367,6 +396,19 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     return cell;
 }
 
+#pragma mark - UITextView Delegate
+- (BOOL)textView:(UITextView *)textView shouldInteractWithURL:(NSURL *)URL inRange:(NSRange)characterRange
+{
+    if ([URL.absoluteString isEqualToString:kLimitedPhotoAccessURL]) {
+        if (@available(iOS 14, *)) {
+            [[PHPhotoLibrary sharedPhotoLibrary] presentLimitedLibraryPickerFromViewController: self];
+        } else {
+            // Fallback on earlier versions
+        }
+        return YES;
+    }
+    return NO;
+}
 
 #pragma mark - PHPhotoLibraryChangeObserver
 
