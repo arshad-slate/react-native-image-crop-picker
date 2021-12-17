@@ -73,6 +73,7 @@ RCT_EXPORT_MODULE();
             @"cropperCancelText": @"Cancel",
             @"cropperChooseText": @"Choose",
             @"showIgCropper": @NO,
+            @"useCropSizeAsOriginalImageSize": @NO,
         };
         self.compression = [[Compression alloc] init];
     }
@@ -885,8 +886,15 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                 cropVC = [[TOCropViewController alloc] initWithCroppingStyle:TOCropViewCroppingStyleCircular image:image];
             } else {
                 cropVC = [[TOCropViewController alloc] initWithImage:image];
+                
                 CGFloat widthRatio = [[self.options objectForKey:@"width"] floatValue];
                 CGFloat heightRatio = [[self.options objectForKey:@"height"] floatValue];
+                
+                if ([[[self options] objectForKey:@"useCropSizeAsOriginalImageSize"] boolValue]) {
+                    widthRatio = image.size.width * 3;
+                    heightRatio = image.size.height * 3;
+                }
+                
                 if (widthRatio > 0 && heightRatio > 0){
                     CGSize aspectRatio = CGSizeMake(widthRatio, heightRatio);
                     cropVC.customAspectRatio = aspectRatio;
