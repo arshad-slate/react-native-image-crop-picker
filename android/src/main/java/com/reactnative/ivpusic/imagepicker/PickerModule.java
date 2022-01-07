@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.core.app.ActivityCompat;
@@ -379,6 +380,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             galleryIntent.addCategory(Intent.CATEGORY_OPENABLE);
 
             final Intent chooserIntent = Intent.createChooser(galleryIntent, "Pick an image");
+            // call picker 1
+            Log.e("INFO", "chooserIntent " + chooserIntent.toString());
             activity.startActivityForResult(chooserIntent, IMAGE_PICKER_REQUEST);
         } catch (Exception e) {
             resultCollector.notifyProblem(E_FAILED_TO_SHOW_PICKER, e);
@@ -388,6 +391,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     @ReactMethod
     public void openPicker(final ReadableMap options, final Promise promise) {
         final Activity activity = getCurrentActivity();
+
+        Log.e("INFO", "-------- open picker");
 
         if (activity == null) {
             promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity doesn't exist");
@@ -483,6 +488,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             return null;
         }
 
+        // /storage/emulated/0/Android/data/com.example/files/Pictures/7c70e4c8-f715-4602-978d-9e2f59bf35fa.jpg
+        Log.e("INFO", "### Got image scuccess 2" + path);
         return getImage(activity, path);
     }
 
@@ -499,6 +506,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             return;
         }
 
+        Log.e("INFO", "### Got image scuccess " + path);
         resultCollector.notifySuccess(getImage(activity, path));
     }
 
@@ -596,6 +604,9 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     }
 
     private WritableMap getImage(final Activity activity, String path) throws Exception {
+
+        Log.e("INFO", "### getImage image scuccess " + path);
+
         WritableMap image = new WritableNativeMap();
 
         if (path.startsWith("http://") || path.startsWith("https://")) {
@@ -652,6 +663,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     }
 
     private void startCropping(final Activity activity, final Uri uri) {
+
         UCrop.Options options = new UCrop.Options();
         options.setCompressionFormat(Bitmap.CompressFormat.JPEG);
         options.setCompressionQuality(100);
@@ -678,18 +690,36 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             configureCropperColors(options);
         }
 
+        String fileName = UUID.randomUUID().toString() + ".jpg";
+        Uri newUri = Uri.fromFile(new File(this.getTmpDir(activity), fileName));
         UCrop uCrop = UCrop
-                .of(uri, Uri.fromFile(new File(this.getTmpDir(activity), UUID.randomUUID().toString() + ".jpg")))
+                .of(uri, newUri)
                 .withOptions(options);
 
         if (width > 0 && height > 0) {
             uCrop.withAspectRatio(width, height);
         }
 
-        uCrop.start(activity);
+        Log.e("INFO", "----got image " + fileName);
+
+        try {
+            resultCollector.setWaitCount(1);
+//            /storage/emulated/0/Android/data/com.example/files/Pictures/7c70e4c8-f715-4602-978d-9e2f59bf35fa.jpg
+
+//            2/storage/emulated/0/DCIM/Camera/20211018_183357.jpg
+//            2/data/user/0/com.example/cache/react-native-image-crop-picker/b1e20094-cb8d-4939-8484-bfeed7c817a9.jpg
+            Log.e("INFO", "start crop image picker result.....");
+            WritableMap result = getSelection(activity, newUri, false);
+            resultCollector.notifySuccess(result);
+        } catch (Exception ex) {
+            resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, ex.getMessage());
+        }
+
+//        uCrop.start(activity);
     }
 
     private void imagePickerResult(Activity activity, final int requestCode, final int resultCode, final Intent data) {
+        Log.e("INFO", "image picker result.....");
         if (resultCode == Activity.RESULT_CANCELED) {
             resultCollector.notifyProblem(E_PICKER_CANCELLED_KEY, E_PICKER_CANCELLED_MSG);
         } else if (resultCode == Activity.RESULT_OK) {
@@ -714,12 +744,20 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             } else {
                 Uri uri = data.getData();
 
+                Log.e("INFO", " --- got image pick " + uri);
+
                 if (uri == null) {
                     resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Cannot resolve image url");
                     return;
                 }
 
-                if (cropping) {
+                if(showIg) {
+                    // Open cropper
+                    // Get new result
+                    // Save bitmap in temp
+                    // Pass the new uri
+                    getAsyncSelection(activity, uri, false);
+                } else if (cropping) {
                     startCropping(activity, uri);
                 } else {
                     try {
@@ -765,7 +803,11 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
     private void croppingResult(Activity activity, final int requestCode, final int resultCode, final Intent data) {
         if (data != null) {
+
+            System.out.println(data);
+            Log.e("INFO", "croppingResult start");
             Uri resultUri = UCrop.getOutput(data);
+            Log.e("INFO", "croppingResult resultUri " + resultUri);
 
             if (resultUri != null) {
                 try {
