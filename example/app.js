@@ -29,8 +29,9 @@ export default class App extends Component {
     };
   }
 
-  pickSingleWithCamera(cropping, mediaType = 'photo') {
+  pickSingleWithCamera(cropping, mediaType = 'photo', showIgCropper = false) {
     ImagePicker.openCamera({
+      showIgCropper: !!showIgCropper,
       cropping: cropping,
       width: 500,
       height: 500,
@@ -132,11 +133,12 @@ export default class App extends Component {
       });
   }
 
-  pickSingle(cropit, circular = false, mediaType) {
+  pickSingle(cropit, circular = false, mediaType, showIgCropper = false) {
     ImagePicker.openPicker({
       width: 500,
       height: 500,
       cropping: cropit,
+      showIgCropper: showIgCropper,
       cropperCircleOverlay: circular,
       sortOrder: 'none',
       compressImageMaxWidth: 1000,
@@ -244,6 +246,19 @@ export default class App extends Component {
               ))
             : null}
         </ScrollView>
+
+        <TouchableOpacity
+          onPress={() => this.pickSingle(true, true, null, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>IG Cropper Select Single</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => this.pickSingleWithCamera(true, undefined, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>IG Cropper Camera</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => this.pickSingleWithCamera(false)}
