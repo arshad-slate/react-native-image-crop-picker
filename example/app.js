@@ -39,7 +39,7 @@ export default class App extends Component {
       mediaType,
     })
       .then((image) => {
-        console.log('received image', image);
+        console.log('received image', JSON.stringify(image, null, 2));
         this.setState({
           image: {
             uri: image.path,
@@ -152,7 +152,7 @@ export default class App extends Component {
       cropperToolbarWidgetColor: '#3498DB',
     })
       .then((image) => {
-        console.log('received image', image);
+        console.log('received image', JSON.stringify(image, null, 2));
         this.setState({
           image: {
             uri: image.path,

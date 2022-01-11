@@ -830,7 +830,20 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                 // Log.e("INFO", " --- Result data" + data.getData());
                 Uri resultUri = data.getData();
                 // Log.e("INFO", " --- start" + resultUri);
-                getAsyncSelection(activity, resultUri, false);
+
+                WritableMap result = getSelection(activity, resultUri, false);
+
+                // cropper data
+                final WritableNativeMap cropRect = new WritableNativeMap();
+                cropRect.putInt("x", 0);
+                cropRect.putInt("y", 0);
+                cropRect.putInt("width", result.getInt("width"));
+                cropRect.putInt("height", result.getInt("height"));
+                result.putMap("cropRect", cropRect);
+                
+                resultCollector.notifySuccess(result);
+
+                //getAsyncSelection(activity, resultUri, false);
             } else {
                 resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Cannot resolve image url");
             }
