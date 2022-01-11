@@ -842,7 +842,6 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
     @Override
     public void onActivityResult(Activity activity, final int requestCode, final int resultCode, final Intent data) {
-        Log.e("INFO", " --- Result" + requestCode);
         if (requestCode == IG_CROP) {
             igCropperResult(activity, requestCode, resultCode, data);
         } else if (requestCode == IMAGE_PICKER_REQUEST) {
