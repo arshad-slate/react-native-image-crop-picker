@@ -49,8 +49,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import com.yashoid.instacropper.InstaCropperActivity;
-import com.yashoid.instacropper.InstaCropperView;
+// import com.yashoid.instacropper.InstaCropperActivity;
+// import com.yashoid.instacropper.InstaCropperView;
 
 class PickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -661,21 +661,21 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     private void startCropping(final Activity activity, final Uri uri) {
 
         // Log.e("INFO", "--- showIgCropper " + (showIgCropper?"TRUE":"FALSE"));
-        if (showIgCropper) {
-            String fileName = UUID.randomUUID().toString() + ".jpg";
-            Uri dstUri = Uri.fromFile(new File(this.getTmpDir(activity), fileName));
-            // Log.e("INFO", " --- IG original uri " + uri.toString());
-            // Log.e("INFO", " --- IG NEw uri " + dstUri.toString());
-            Intent intent = InstaCropperActivity.getIntent(this.reactContext, uri, dstUri, 1024, 100);
-            activity.startActivityForResult(intent, IG_CROP);
+        // if (showIgCropper) {
+        //     String fileName = UUID.randomUUID().toString() + ".jpg";
+        //     Uri dstUri = Uri.fromFile(new File(this.getTmpDir(activity), fileName));
+        //     // Log.e("INFO", " --- IG original uri " + uri.toString());
+        //     // Log.e("INFO", " --- IG NEw uri " + dstUri.toString());
+        //     Intent intent = InstaCropperActivity.getIntent(this.reactContext, uri, dstUri, 1024, 100);
+        //     activity.startActivityForResult(intent, IG_CROP);
 
-            /* Direct pick
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-             */
+        //     /* Direct pick
+        //     Intent intent = new Intent(Intent.ACTION_PICK);
+        //     intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        //      */
 
-            return;
-        }
+        //     return;
+        // }
 
         UCrop.Options options = new UCrop.Options();
         options.setCompressionFormat(Bitmap.CompressFormat.JPEG);
