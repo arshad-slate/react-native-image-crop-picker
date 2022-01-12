@@ -821,10 +821,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             if (resultCode == Activity.RESULT_CANCELED) {
                 resultCollector.notifyProblem(E_PICKER_CANCELLED_KEY, E_PICKER_CANCELLED_MSG);
             } else if (resultCode == Activity.RESULT_OK) {
-                // Log.e("INFO", " --- resultCode" + resultCode);
-                // Log.e("INFO", " --- Result data" + data.getData());
                 Uri resultUri = data.getData();
-                // Log.e("INFO", " --- start" + resultUri);
 
                 WritableMap result = getSelection(activity, resultUri, false);
 
@@ -837,13 +834,10 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                 result.putMap("cropRect", cropRect);
                 
                 resultCollector.notifySuccess(result);
-
-                //getAsyncSelection(activity, resultUri, false);
             } else {
                 resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Cannot resolve image url");
             }
         } catch (Exception ex) {
-            // Log.e("INFO", " --- Result error" + ex.getMessage());
             resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, ex.getMessage());
         }
     }
