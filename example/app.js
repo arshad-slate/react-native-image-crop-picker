@@ -28,6 +28,7 @@ export default class App extends Component {
       images: null,
     };
   }
+  
 
   pickSingleWithCamera(cropping, mediaType = 'photo', showIgCropper = false) {
     ImagePicker.openCamera({
@@ -133,10 +134,11 @@ export default class App extends Component {
       });
   }
 
-  pickSingle(cropit, circular = false, mediaType, showIgCropper = false) {
+  pickSingle(cropit, circular = false, mediaType, showIgCropper = false, useCropSizeAsOriginalImageSize = false) {
     ImagePicker.openPicker({
       width: 500,
       height: 500,
+      useCropSizeAsOriginalImageSize: !!useCropSizeAsOriginalImageSize,
       cropping: cropit,
       showIgCropper: showIgCropper,
       cropperCircleOverlay: circular,
@@ -150,6 +152,13 @@ export default class App extends Component {
       cropperToolbarColor: 'white',
       cropperActiveWidgetColor: 'white',
       cropperToolbarWidgetColor: '#3498DB',
+      ...(useCropSizeAsOriginalImageSize ? {
+        cropping: true,
+        compressImageQuality: 0.8,
+        freeStyleCropEnabled: true,
+        cropperChooseText: 'Send',
+        useCropSizeAsOriginalImageSize: true,
+      } : {})
     })
       .then((image) => {
         console.log('received image', JSON.stringify(image, null, 2));
@@ -248,11 +257,19 @@ export default class App extends Component {
         </ScrollView>
 
         <TouchableOpacity
+          onPress={() => this.pickSingle(true, false, null, false, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>IG Cropper Chat</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
           onPress={() => this.pickSingle(true, true, null, true)}
           style={styles.button}
         >
           <Text style={styles.text}>IG Cropper Select Single</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => this.pickSingleWithCamera(true, undefined, true)}
           style={styles.button}

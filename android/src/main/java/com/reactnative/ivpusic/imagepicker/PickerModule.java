@@ -77,6 +77,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
     private String mediaType = "any";
     private boolean showIgCropper = false;
+    private boolean useCropSizeAsOriginalImageSize = false;
     private boolean multiple = false;
     private boolean includeBase64 = false;
     private boolean includeExif = false;
@@ -126,6 +127,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
     private void setConfiguration(final ReadableMap options) {
         showIgCropper = options.hasKey("showIgCropper") ? options.getBoolean("showIgCropper") : false;
+        useCropSizeAsOriginalImageSize = options.hasKey("useCropSizeAsOriginalImageSize") ? options.getBoolean("useCropSizeAsOriginalImageSize") : false;
         mediaType = options.hasKey("mediaType") ? options.getString("mediaType") : "any";
         multiple = options.hasKey("multiple") && options.getBoolean("multiple");
         includeBase64 = options.hasKey("includeBase64") && options.getBoolean("includeBase64");
@@ -660,20 +662,11 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
     private void startCropping(final Activity activity, final Uri uri) {
 
-        // Log.e("INFO", "--- showIgCropper " + (showIgCropper?"TRUE":"FALSE"));
         if (showIgCropper) {
             String fileName = UUID.randomUUID().toString() + ".jpg";
             Uri dstUri = Uri.fromFile(new File(this.getTmpDir(activity), fileName));
-            // Log.e("INFO", " --- IG original uri " + uri.toString());
-            // Log.e("INFO", " --- IG NEw uri " + dstUri.toString());
             Intent intent = InstaCropperActivity.getIntent(this.reactContext, uri, dstUri, 1024, 100);
             activity.startActivityForResult(intent, IG_CROP);
-
-            /* Direct pick
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-             */
-
             return;
         }
 
@@ -707,7 +700,9 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                 .of(uri, Uri.fromFile(new File(this.getTmpDir(activity), UUID.randomUUID().toString() + ".jpg")))
                 .withOptions(options);
 
-        if (width > 0 && height > 0) {
+        if(useCropSizeAsOriginalImageSize) {
+            uCrop.useSourceImageAspectRatio();
+        } else if (width > 0 && height > 0) {
             uCrop.withAspectRatio(width, height);
         }
 
