@@ -30,7 +30,7 @@ export default class App extends Component {
   }
   
 
-  pickSingleWithCamera(cropping, mediaType = 'photo', showIgCropper = false) {
+  pickSingleWithCamera(cropping, mediaType = 'photo', showIgCropper = false, useCropSizeAsOriginalImageSize) {
     ImagePicker.openCamera({
       showIgCropper: !!showIgCropper,
       cropping: cropping,
@@ -38,6 +38,14 @@ export default class App extends Component {
       height: 500,
       includeExif: true,
       mediaType,
+
+      ...(useCropSizeAsOriginalImageSize ? {
+        cropping: true,
+        compressImageQuality: 0.8,
+        freeStyleCropEnabled: true,
+        cropperChooseText: 'Send',
+        useCropSizeAsOriginalImageSize: true,
+      } : {})
     })
       .then((image) => {
         console.log('received image', JSON.stringify(image, null, 2));
@@ -263,6 +271,13 @@ export default class App extends Component {
           <Text style={styles.text}>IG Cropper Chat</Text>
         </TouchableOpacity>
         
+        <TouchableOpacity
+          onPress={() => this.pickSingleWithCamera(true, undefined, false, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>Chat Camera</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => this.pickSingle(true, true, null, true)}
           style={styles.button}

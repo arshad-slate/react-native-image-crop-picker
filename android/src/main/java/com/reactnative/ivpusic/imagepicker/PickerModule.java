@@ -52,6 +52,9 @@ import java.util.concurrent.Callable;
 import com.yashoid.instacropper.InstaCropperActivity;
 import com.yashoid.instacropper.InstaCropperView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 class PickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
     private static final int IMAGE_PICKER_REQUEST = 61110;
@@ -75,6 +78,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     private static final String E_NO_CAMERA_PERMISSION_KEY = "E_NO_CAMERA_PERMISSION";
     private static final String E_NO_CAMERA_PERMISSION_MSG = "User did not grant camera permission.";
 
+    private boolean isCamera = false;
     private String mediaType = "any";
     private boolean showIgCropper = false;
     private boolean useCropSizeAsOriginalImageSize = false;
@@ -660,6 +664,22 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         }
     }
 
+    private JSONObject getImageSize(Uri uri, String path){
+
+        JSONObject size = new JSONObject();
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, options);
+            int imageHeight = options.outHeight;
+            int imageWidth = options.outWidth;
+            size.put("width", imageWidth);
+            size.put("height", imageHeight);
+        } catch (Exception e) {
+        }
+        return size;
+    }
+
     private void startCropping(final Activity activity, final Uri uri) {
 
         if (showIgCropper) {
@@ -701,7 +721,21 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                 .withOptions(options);
 
         if(useCropSizeAsOriginalImageSize) {
-            uCrop.useSourceImageAspectRatio();
+            try {
+                uCrop.useSourceImageAspectRatio();
+
+                /*
+                if(isCamera) {
+                    // using default. facing issue with camera image orientation.
+                    uCrop.useSourceImageAspectRatio();
+                } else {
+                    JSONObject imageSize = getImageSize(destUri, resolveRealPath(activity, uri, false));
+                    uCrop.withAspectRatio(imageSize.getInt("width"), imageSize.getInt("height"));
+                }
+                */
+            } catch (Exception e) {
+                uCrop.withAspectRatio(width, height);
+            }
         } else if (width > 0 && height > 0) {
             uCrop.withAspectRatio(width, height);
         }
@@ -847,8 +881,10 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         if (requestCode == IG_CROP) {
             igCropperResult(activity, requestCode, resultCode, data);
         } else if (requestCode == IMAGE_PICKER_REQUEST) {
+            isCamera = false;
             imagePickerResult(activity, requestCode, resultCode, data);
         } else if (requestCode == CAMERA_PICKER_REQUEST) {
+            isCamera = true;
             cameraPickerResult(activity, requestCode, resultCode, data);
         } else if (requestCode == UCrop.REQUEST_CROP) {
             croppingResult(activity, requestCode, resultCode, data);
