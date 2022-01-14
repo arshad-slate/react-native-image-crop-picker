@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
-    "ios": "node node_modules/react-native/local-cli/cli.js run-ios",
-    "android": "node node_modules/react-native/local-cli/cli.js run-android"
+    "start": "npx react-native start",
+    "ios": "npx react-native run-ios",
+    "android": "npx react-native run-android",
+    "clean": "cd android && ./gradlew clean && cd .."
   },
   "dependencies": {
     "react": "17.0.2",

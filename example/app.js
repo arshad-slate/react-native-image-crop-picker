@@ -28,17 +28,27 @@ export default class App extends Component {
       images: null,
     };
   }
+  
 
-  pickSingleWithCamera(cropping, mediaType = 'photo') {
+  pickSingleWithCamera(cropping, mediaType = 'photo', showIgCropper = false, useCropSizeAsOriginalImageSize) {
     ImagePicker.openCamera({
+      showIgCropper: !!showIgCropper,
       cropping: cropping,
       width: 500,
       height: 500,
       includeExif: true,
       mediaType,
+
+      ...(useCropSizeAsOriginalImageSize ? {
+        cropping: true,
+        compressImageQuality: 0.8,
+        freeStyleCropEnabled: true,
+        cropperChooseText: 'Send',
+        useCropSizeAsOriginalImageSize: true,
+      } : {})
     })
       .then((image) => {
-        console.log('received image', image);
+        console.log('received image', JSON.stringify(image, null, 2));
         this.setState({
           image: {
             uri: image.path,
@@ -132,11 +142,13 @@ export default class App extends Component {
       });
   }
 
-  pickSingle(cropit, circular = false, mediaType) {
+  pickSingle(cropit, circular = false, mediaType, showIgCropper = false, useCropSizeAsOriginalImageSize = false) {
     ImagePicker.openPicker({
       width: 500,
       height: 500,
+      useCropSizeAsOriginalImageSize: !!useCropSizeAsOriginalImageSize,
       cropping: cropit,
+      showIgCropper: showIgCropper,
       cropperCircleOverlay: circular,
       sortOrder: 'none',
       compressImageMaxWidth: 1000,
@@ -148,9 +160,16 @@ export default class App extends Component {
       cropperToolbarColor: 'white',
       cropperActiveWidgetColor: 'white',
       cropperToolbarWidgetColor: '#3498DB',
+      ...(useCropSizeAsOriginalImageSize ? {
+        cropping: true,
+        compressImageQuality: 0.8,
+        freeStyleCropEnabled: true,
+        cropperChooseText: 'Send',
+        useCropSizeAsOriginalImageSize: true,
+      } : {})
     })
       .then((image) => {
-        console.log('received image', image);
+        console.log('received image', JSON.stringify(image, null, 2));
         this.setState({
           image: {
             uri: image.path,
@@ -244,6 +263,34 @@ export default class App extends Component {
               ))
             : null}
         </ScrollView>
+
+        <TouchableOpacity
+          onPress={() => this.pickSingle(true, false, null, false, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>IG Cropper Chat</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => this.pickSingleWithCamera(true, undefined, false, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>Chat Camera</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => this.pickSingle(true, true, null, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>IG Cropper Select Single</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => this.pickSingleWithCamera(true, undefined, true)}
+          style={styles.button}
+        >
+          <Text style={styles.text}>IG Cropper Camera</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => this.pickSingleWithCamera(false)}

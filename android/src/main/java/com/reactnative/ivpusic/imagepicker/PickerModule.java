@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.core.app.ActivityCompat;
@@ -48,10 +49,17 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import com.yashoid.instacropper.InstaCropperActivity;
+import com.yashoid.instacropper.InstaCropperView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 class PickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
     private static final int IMAGE_PICKER_REQUEST = 61110;
     private static final int CAMERA_PICKER_REQUEST = 61111;
+    private static final int IG_CROP = 61112;
     private static final String E_ACTIVITY_DOES_NOT_EXIST = "E_ACTIVITY_DOES_NOT_EXIST";
 
     private static final String E_PICKER_CANCELLED_KEY = "E_PICKER_CANCELLED";
@@ -70,7 +78,10 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     private static final String E_NO_CAMERA_PERMISSION_KEY = "E_NO_CAMERA_PERMISSION";
     private static final String E_NO_CAMERA_PERMISSION_MSG = "User did not grant camera permission.";
 
+    private boolean isCamera = false;
     private String mediaType = "any";
+    private boolean showIgCropper = false;
+    private boolean useCropSizeAsOriginalImageSize = false;
     private boolean multiple = false;
     private boolean includeBase64 = false;
     private boolean includeExif = false;
@@ -119,6 +130,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     }
 
     private void setConfiguration(final ReadableMap options) {
+        showIgCropper = options.hasKey("showIgCropper") ? options.getBoolean("showIgCropper") : false;
+        useCropSizeAsOriginalImageSize = options.hasKey("useCropSizeAsOriginalImageSize") ? options.getBoolean("useCropSizeAsOriginalImageSize") : false;
         mediaType = options.hasKey("mediaType") ? options.getString("mediaType") : "any";
         multiple = options.hasKey("multiple") && options.getBoolean("multiple");
         includeBase64 = options.hasKey("includeBase64") && options.getBoolean("includeBase64");
@@ -651,7 +664,32 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         }
     }
 
+    private JSONObject getImageSize(Uri uri, String path){
+
+        JSONObject size = new JSONObject();
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, options);
+            int imageHeight = options.outHeight;
+            int imageWidth = options.outWidth;
+            size.put("width", imageWidth);
+            size.put("height", imageHeight);
+        } catch (Exception e) {
+        }
+        return size;
+    }
+
     private void startCropping(final Activity activity, final Uri uri) {
+
+        if (showIgCropper) {
+            String fileName = UUID.randomUUID().toString() + ".jpg";
+            Uri dstUri = Uri.fromFile(new File(this.getTmpDir(activity), fileName));
+            Intent intent = InstaCropperActivity.getIntent(this.reactContext, uri, dstUri, 1024, 100);
+            activity.startActivityForResult(intent, IG_CROP);
+            return;
+        }
+
         UCrop.Options options = new UCrop.Options();
         options.setCompressionFormat(Bitmap.CompressFormat.JPEG);
         options.setCompressionQuality(100);
@@ -682,7 +720,23 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                 .of(uri, Uri.fromFile(new File(this.getTmpDir(activity), UUID.randomUUID().toString() + ".jpg")))
                 .withOptions(options);
 
-        if (width > 0 && height > 0) {
+        if(useCropSizeAsOriginalImageSize) {
+            try {
+                uCrop.useSourceImageAspectRatio();
+
+                /*
+                if(isCamera) {
+                    // using default. facing issue with camera image orientation.
+                    uCrop.useSourceImageAspectRatio();
+                } else {
+                    JSONObject imageSize = getImageSize(destUri, resolveRealPath(activity, uri, false));
+                    uCrop.withAspectRatio(imageSize.getInt("width"), imageSize.getInt("height"));
+                }
+                */
+            } catch (Exception e) {
+                uCrop.withAspectRatio(width, height);
+            }
+        } else if (width > 0 && height > 0) {
             uCrop.withAspectRatio(width, height);
         }
 
@@ -795,11 +849,42 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         }
     }
 
+    private void igCropperResult(Activity activity, final int requestCode, final int resultCode, final Intent data) {
+        // IG crop result
+        try {
+            if (resultCode == Activity.RESULT_CANCELED) {
+                resultCollector.notifyProblem(E_PICKER_CANCELLED_KEY, E_PICKER_CANCELLED_MSG);
+            } else if (resultCode == Activity.RESULT_OK) {
+                Uri resultUri = data.getData();
+
+                WritableMap result = getSelection(activity, resultUri, false);
+
+                // cropper data
+                final WritableNativeMap cropRect = new WritableNativeMap();
+                cropRect.putInt("x", 0);
+                cropRect.putInt("y", 0);
+                cropRect.putInt("width", result.getInt("width"));
+                cropRect.putInt("height", result.getInt("height"));
+                result.putMap("cropRect", cropRect);
+                
+                resultCollector.notifySuccess(result);
+            } else {
+                resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Cannot resolve image url");
+            }
+        } catch (Exception ex) {
+            resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, ex.getMessage());
+        }
+    }
+
     @Override
     public void onActivityResult(Activity activity, final int requestCode, final int resultCode, final Intent data) {
-        if (requestCode == IMAGE_PICKER_REQUEST) {
+        if (requestCode == IG_CROP) {
+            igCropperResult(activity, requestCode, resultCode, data);
+        } else if (requestCode == IMAGE_PICKER_REQUEST) {
+            isCamera = false;
             imagePickerResult(activity, requestCode, resultCode, data);
         } else if (requestCode == CAMERA_PICKER_REQUEST) {
+            isCamera = true;
             cameraPickerResult(activity, requestCode, resultCode, data);
         } else if (requestCode == UCrop.REQUEST_CROP) {
             croppingResult(activity, requestCode, resultCode, data);
