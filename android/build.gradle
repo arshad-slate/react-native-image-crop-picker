@@ -23,5 +23,5 @@ dependencies {
     implementation 'com.facebook.react:react-native:+'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'com.github.yalantis:ucrop:2.2.6-native'
-    implementation 'com.github.SL8-Pte-Ltd:InstaCropper:1.2.5' // slate library
+    implementation 'com.github.SL8-Pte-Ltd:InstaCropper:1.2.6' // slate library
 }
