@@ -74,6 +74,7 @@ RCT_EXPORT_MODULE();
             @"cropperChooseText": @"Choose",
             @"showIgCropper": @NO,
             @"useCropSizeAsOriginalImageSize": @NO,
+            @"cropperRotateButtonsHidden": @NO
         };
         self.compression = [[Compression alloc] init];
     }
@@ -914,7 +915,17 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
 
             [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
         }
-    
+        
+        cropVC.title = [[self options] objectForKey:@"cropperToolbarTitle"];
+        cropVC.delegate = self;
+        
+        cropVC.doneButtonTitle = [self.options objectForKey:@"cropperChooseText"];
+        cropVC.cancelButtonTitle = [self.options objectForKey:@"cropperCancelText"];
+        cropVC.rotateButtonsHidden = [[self.options objectForKey:@"cropperRotateButtonsHidden"] boolValue];
+        
+        cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
+        
+        [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
     });
 }
 #pragma mark - TOCropViewController and IGCropViewController Delegate
