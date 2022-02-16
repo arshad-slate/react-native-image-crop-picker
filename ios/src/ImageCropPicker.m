@@ -358,6 +358,18 @@ RCT_EXPORT_METHOD(openPicker:(NSDictionary *)options
                 }
             }
             
+            NSMutableOrderedSet *selectedAssets = [[NSMutableOrderedSet alloc] init];
+            PHFetchResult *phAssetFetchResult = nil;
+            
+            NSArray<NSString *> *seletedIds = [self.options objectForKey:@"selectedPhotosLocalIds"];
+            if (seletedIds) {
+                phAssetFetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:seletedIds options:nil];
+                [phAssetFetchResult enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                    [selectedAssets addObject:obj];
+                }];
+                imagePickerController.selectedAssets =  selectedAssets;
+            }
+           
             [imagePickerController setModalPresentationStyle: UIModalPresentationFullScreen];
             [[self getRootVC] presentViewController:imagePickerController animated:YES completion:nil];
         });
@@ -532,7 +544,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     options.networkAccessAllowed = YES;
     
     if ([[[self options] objectForKey:@"multiple"] boolValue]) {
-        NSMutableArray *selections = [[NSMutableArray alloc] init];
+        NSMutableDictionary *selections = [[NSMutableDictionary alloc] init];
         
         [self showActivityIndicator:^(UIActivityIndicatorView *indicatorView, UIView *overlayView) {
             NSLock *lock = [[NSLock alloc] init];
@@ -553,8 +565,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                 }]];
                                 return;
                             }
-                            
-                            [selections addObject:video];
+                            [selections setValue:video forKey:phAsset.localIdentifier];
                             processed++;
                             [lock unlock];
                             
@@ -627,22 +638,22 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                     if([[self.options objectForKey:@"includeExif"] boolValue]) {
                                         exif = [[CIImage imageWithData:imageData] properties];
                                     }
-                                    
-                                    [selections addObject:[self createAttachmentResponse:filePath
-                                                                                withExif: exif
-                                                                           withSourceURL:[sourceURL absoluteString]
-                                                                     withLocalIdentifier: phAsset.localIdentifier
-                                                                            withFilename: [phAsset valueForKey:@"filename"]
-                                                                               withWidth:imageResult.width
-                                                                              withHeight:imageResult.height
-                                                                                withMime:imageResult.mime
-                                                                                withSize:[NSNumber numberWithUnsignedInteger:imageResult.data.length]
-                                                                            withDuration: nil
-                                                                                withData:[[self.options objectForKey:@"includeBase64"] boolValue] ? [imageResult.data base64EncodedStringWithOptions:0]: nil
-                                                                                withRect:CGRectNull
-                                                                        withCreationDate:phAsset.creationDate
-                                                                    withModificationDate:phAsset.modificationDate
-                                                           ]];
+                                    [selections setValue:[self createAttachmentResponse:filePath
+                                                                               withExif: exif
+                                                                          withSourceURL:[sourceURL absoluteString]
+                                                                    withLocalIdentifier: phAsset.localIdentifier
+                                                                           withFilename: [phAsset valueForKey:@"filename"]
+                                                                              withWidth:imageResult.width
+                                                                             withHeight:imageResult.height
+                                                                               withMime:imageResult.mime
+                                                                               withSize:[NSNumber numberWithUnsignedInteger:imageResult.data.length]
+                                                                           withDuration: nil
+                                                                               withData:[[self.options objectForKey:@"includeBase64"] boolValue] ? [imageResult.data base64EncodedStringWithOptions:0]: nil
+                                                                               withRect:CGRectNull
+                                                                       withCreationDate:phAsset.creationDate
+                                                                   withModificationDate:phAsset.modificationDate
+                                                          ] forKey:phAsset.localIdentifier];
+
                                 }
                                 processed++;
                                 [lock unlock];
@@ -652,7 +663,11 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                     [indicatorView stopAnimating];
                                     [overlayView removeFromSuperview];
                                     [imagePickerController dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
-                                        self.resolve(selections);
+                                        NSMutableArray *selectedAssets = [[NSMutableArray alloc] init];
+                                        for (PHAsset *tmpAssets in assets) {
+                                            [selectedAssets addObject: [selections valueForKey:tmpAssets.localIdentifier]];
+                                        }
+                                        self.resolve(selectedAssets);
                                     }]];
                                     return;
                                 }

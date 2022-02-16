@@ -331,6 +331,16 @@ declare module "react-native-image-crop-picker" {
          * @default false
          */
         useCropSizeAsOriginalImageSize?: boolean;
+
+
+        /**
+         * Pass localIdentifieres of selected photo.
+         * If localIdentifiers are specified then the picker will show those assets as preselected
+         *
+         * @default undefined
+         * @platform iOS only
+         */
+        selectedPhotosLocalIds?: string[];
     }
 
     type CropperOptions = ImageOptions & {
