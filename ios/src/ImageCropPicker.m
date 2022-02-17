@@ -364,9 +364,14 @@ RCT_EXPORT_METHOD(openPicker:(NSDictionary *)options
             NSArray<NSString *> *seletedIds = [self.options objectForKey:@"selectedPhotosLocalIds"];
             if (seletedIds) {
                 phAssetFetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:seletedIds options:nil];
+                NSMutableDictionary *dic = [NSMutableDictionary new];
+                
                 [phAssetFetchResult enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                    [selectedAssets addObject:obj];
+                    [dic setValue:obj forKey:obj.localIdentifier];
                 }];
+                for (NSString *lId in seletedIds) {
+                    [selectedAssets addObject:[dic valueForKey:lId]];
+                }
                 imagePickerController.selectedAssets =  selectedAssets;
             }
            
