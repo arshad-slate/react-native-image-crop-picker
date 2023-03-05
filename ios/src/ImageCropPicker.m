@@ -217,7 +217,8 @@ RCT_EXPORT_METHOD(openCamera:(NSDictionary *)options
             exif = [info objectForKey:UIImagePickerControllerMediaMetadata];
         }
         
-        [self processSingleImagePick:chosenImage withExif:exif withViewController:picker withSourceURL:self.croppingFile[@"sourceURL"] withLocalIdentifier:self.croppingFile[@"localIdentifier"] withFilename:self.croppingFile[@"filename"] withCreationDate:self.croppingFile[@"creationDate"] withModificationDate:self.croppingFile[@"modificationDate"]];
+        [self processSingleImagePick:chosenImage withExif:exif withViewController:picker withSourceURL:self.croppingFile[@"sourceURL"] withLocalIdentifier:self.croppingFile[@"localIdentifier"] withFilename:self.croppingFile[@"filename"] withCreationDate:self.croppingFile[@"creationDate"] withModificationDate:self.croppingFile[@"modificationDate"]
+            withMime:@"image/png"];
     }
 }
 
@@ -717,7 +718,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [indicatorView stopAnimating];
                             [overlayView removeFromSuperview];
-                            
+                            NSString *mime = [self determineMimeTypeFromImageData:imageData];
                             [self processSingleImagePick:[UIImage imageWithData:imageData]
                                                 withExif: exif
                                       withViewController:imagePickerController
@@ -725,7 +726,8 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                      withLocalIdentifier:phAsset.localIdentifier
                                             withFilename:[phAsset valueForKey:@"filename"]
                                         withCreationDate:phAsset.creationDate
-                                    withModificationDate:phAsset.modificationDate];
+                                    withModificationDate:phAsset.modificationDate
+                                                withMime:mime];
                         });
                     }];
                 }];
@@ -743,7 +745,8 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
 // when user selected single image, with camera or from photo gallery,
 // this method will take care of attaching image metadata, and sending image to cropping controller
 // or to user directly
-- (void) processSingleImagePick:(UIImage*)image withExif:(NSDictionary*) exif withViewController:(UIViewController*)viewController withSourceURL:(NSString*)sourceURL withLocalIdentifier:(NSString*)localIdentifier withFilename:(NSString*)filename withCreationDate:(NSDate*)creationDate withModificationDate:(NSDate*)modificationDate {
+- (void) processSingleImagePick:(UIImage*)image withExif:(NSDictionary*) exif withViewController:(UIViewController*)viewController withSourceURL:(NSString*)sourceURL withLocalIdentifier:(NSString*)localIdentifier withFilename:(NSString*)filename withCreationDate:(NSDate*)creationDate withModificationDate:(NSDate*)modificationDate
+    withMime:(NSString*)mime {
     
     if (image == nil) {
         [viewController dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
@@ -754,7 +757,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     
     NSLog(@"id: %@ filename: %@", localIdentifier, filename);
     
-    if ([[[self options] objectForKey:@"cropping"] boolValue]) {
+    if ([[[self options] objectForKey:@"cropping"] boolValue] && ![mime containsString:@"gif"]) {
         self.croppingFile = [[NSMutableDictionary alloc] init];
         self.croppingFile[@"sourceURL"] = sourceURL;
         self.croppingFile[@"localIdentifier"] = localIdentifier;
