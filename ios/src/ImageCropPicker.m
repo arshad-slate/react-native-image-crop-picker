@@ -787,7 +787,7 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                            withFilename:filename
                                               withWidth:imageResult.width
                                              withHeight:imageResult.height
-                                               withMime:imageResult.mime
+                                               withMime:mime
                                                withSize:[NSNumber numberWithUnsignedInteger:imageResult.data.length]
                                            withDuration: nil
                                                withData:[[self.options objectForKey:@"includeBase64"] boolValue] ? [imageResult.data base64EncodedStringWithOptions:0] : nil
