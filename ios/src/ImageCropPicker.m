@@ -757,7 +757,8 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     
     NSLog(@"id: %@ filename: %@", localIdentifier, filename);
     
-    if ([[[self options] objectForKey:@"cropping"] boolValue] && ![mime containsString:@"gif"]) {
+    if ([[[self options] objectForKey:@"cropping"] boolValue]) {
+        
         self.croppingFile = [[NSMutableDictionary alloc] init];
         self.croppingFile[@"sourceURL"] = sourceURL;
         self.croppingFile[@"localIdentifier"] = localIdentifier;
@@ -766,7 +767,23 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
         self.croppingFile[@"modifcationDate"] = modificationDate;
         NSLog(@"CroppingFile %@", self.croppingFile);
         
-        [self cropImage:[image fixOrientation]];
+        if ([mime containsString:@"gif"] && ![[[self options] objectForKey:@"forceJpg"] boolValue]) {
+            IGCropViewController *cropVC = [[IGCropViewController alloc] initWithImage:image minimumPortraitWidth:277 minimumLandScapeHeight:197];
+            cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
+            cropVC.delegate = self;
+
+            cropVC.chooseButtonTitle = @"Send";
+            cropVC.cancelButtonTitle = @"Cancel";
+            cropVC.sourcURL = sourceURL;
+            cropVC.cancelButtonColor = [UIColor colorWithRed:61.0/255.0 green:103.0/255.0 blue:205/255.0 alpha:1];
+            cropVC.chooseButtonColor  = [UIColor colorWithRed:226.0/255.0 green:195.0/255.0 blue:90.0/255.0 alpha:1];
+            cropVC.isGif = YES;
+            [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
+        } else {
+        
+            [self cropImage:[image fixOrientation]];
+        }
+        
     } else {
         ImageResult *imageResult = [self.compression compressImage:[image fixOrientation]  withOptions:self.options];
         NSString *filePath = [self persistFile:imageResult.data];
@@ -957,6 +974,38 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
 }
 
 - (void)cropViewController:(IGCropViewController *)cropViewController didCropToImage:(UIImage *)image withRect:(CGRect)cropRect {
-    [self imageCropViewController:cropViewController didCropImage:image usingCropRect:cropRect];
+    
+    if (!cropViewController.isGif) {
+        [self imageCropViewController:cropViewController didCropImage:image usingCropRect:cropRect];
+    } else {
+        ImageResult *imageResult = [self.compression compressImage:[image fixOrientation]  withOptions:self.options];
+        NSString *filePath = [self persistFile:imageResult.data];
+        if (filePath == nil) {
+            [self dismissCropper:cropViewController selectionDone:YES completion:[self waitAnimationEnd:^{
+                self.reject(ERROR_CANNOT_SAVE_IMAGE_KEY, ERROR_CANNOT_SAVE_IMAGE_MSG, nil);
+            }]];
+            return;
+        }
+        
+        
+        [self dismissCropper:cropViewController selectionDone:YES completion:[self waitAnimationEnd:^{
+            self.resolve([self createAttachmentResponse:filePath
+                                               withExif: nil
+                                          withSourceURL: self.croppingFile[@"sourceURL"]
+                                    withLocalIdentifier: self.croppingFile[@"localIdentifier"]
+                                           withFilename: self.croppingFile[@"filename"]
+                                              withWidth:imageResult.width
+                                             withHeight:imageResult.height
+                                               withMime:@"image/gif"
+                                               withSize:[NSNumber numberWithUnsignedInteger:imageResult.data.length]
+                                           withDuration: nil
+                                               withData:[[self.options objectForKey:@"includeBase64"] boolValue] ? [imageResult.data base64EncodedStringWithOptions:0] : nil
+                                               withRect:cropRect
+                                       withCreationDate:self.croppingFile[@"creationDate"]
+                                   withModificationDate:self.croppingFile[@"modificationDate"]
+                          ]);
+        }]];
+    }
+    
 }
 @end
