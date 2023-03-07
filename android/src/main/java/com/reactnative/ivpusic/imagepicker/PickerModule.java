@@ -375,10 +375,11 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
             if (cropping || mediaType.equals("photo")) {
                 galleryIntent.setType("image/*");
-                if (cropping) {
-                    String[] mimetypes = {"image/jpeg", "image/png"};
-                    galleryIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
-                }
+                // Disabling this since we need gif also selectable
+//                if (cropping) {
+//                    String[] mimetypes = {"image/jpeg", "image/png"};
+//                    galleryIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+//                }
             } else if (mediaType.equals("video")) {
                 galleryIntent.setType("video/*");
             } else {
@@ -773,7 +774,13 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                     return;
                 }
 
-                if (cropping) {
+                String mime = "image/jpeg";
+                try {
+                    String path = resolveRealPath(activity, uri, false);
+                    mime = getMimeType(path);
+                } catch (Exception ex) {}
+
+                if (cropping && !mime.contains("gif")) {
                     startCropping(activity, uri);
                 } else {
                     try {
