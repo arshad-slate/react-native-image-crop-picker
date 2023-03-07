@@ -324,6 +324,21 @@ declare module "react-native-image-crop-picker" {
          */
         showIgCropper?: boolean;
 
+
+        /**
+         * iOS: Only - Show preview for gif
+         *
+         * @default false
+         */
+        showGifPreview?: boolean
+
+        /**
+         * iOS: Only - Show preview for gif
+         *
+         * @default false
+         */
+        showCropperForGif?: boolean
+
         /**
          * Show crop image react as the original image size.
          * If true then no need to specify width and height. Original image height and width will be used.

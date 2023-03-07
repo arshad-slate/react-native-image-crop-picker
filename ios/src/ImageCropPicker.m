@@ -74,6 +74,8 @@ RCT_EXPORT_MODULE();
             @"cropperChooseText": @"Choose",
             @"showIgCropper": @NO,
             @"useCropSizeAsOriginalImageSize": @NO,
+            @"showGifPreview": @NO,
+            @"showCropperForGif": @YES
         };
         self.compression = [[Compression alloc] init];
     }
@@ -756,8 +758,40 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     }
     
     NSLog(@"id: %@ filename: %@", localIdentifier, filename);
-    
-    if ([[[self options] objectForKey:@"cropping"] boolValue]) {
+    if ([mime containsString:@"gif"] &&
+        [[[self options] objectForKey:@"showGifPreview"] boolValue] &&
+        [[[self options] objectForKey:@"cropping"] boolValue]
+        ) {
+        
+        self.croppingFile = [[NSMutableDictionary alloc] init];
+        self.croppingFile[@"sourceURL"] = sourceURL;
+        self.croppingFile[@"localIdentifier"] = localIdentifier;
+        self.croppingFile[@"filename"] = filename;
+        self.croppingFile[@"creationDate"] = creationDate;
+        self.croppingFile[@"modifcationDate"] = modificationDate;
+        
+        IGCropViewController *cropVC = [[IGCropViewController alloc] initWithImage:image minimumPortraitWidth:277 minimumLandScapeHeight:197];
+        cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
+        cropVC.delegate = self;
+
+        cropVC.chooseButtonTitle = @"Send";
+        cropVC.cancelButtonTitle = @"Cancel";
+        cropVC.sourcURL = sourceURL;
+        cropVC.cancelButtonColor = [UIColor colorWithRed:61.0/255.0 green:103.0/255.0 blue:205/255.0 alpha:1];
+        cropVC.chooseButtonColor  = [UIColor colorWithRed:226.0/255.0 green:195.0/255.0 blue:90.0/255.0 alpha:1];
+        cropVC.isGif = YES;
+        [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
+    }
+    else if ([[[self options] objectForKey:@"cropping"] boolValue] &&
+             (
+              (
+               [mime containsString:@"gif"] &&
+               [[[self options] objectForKey:@"showCropperForGif"] boolValue]
+              ) ||
+              ![mime containsString:@"gif"]
+              )
+             )  {
+        
         
         self.croppingFile = [[NSMutableDictionary alloc] init];
         self.croppingFile[@"sourceURL"] = sourceURL;
@@ -766,23 +800,9 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
         self.croppingFile[@"creationDate"] = creationDate;
         self.croppingFile[@"modifcationDate"] = modificationDate;
         NSLog(@"CroppingFile %@", self.croppingFile);
-        
-        if ([mime containsString:@"gif"] && ![[[self options] objectForKey:@"forceJpg"] boolValue]) {
-            IGCropViewController *cropVC = [[IGCropViewController alloc] initWithImage:image minimumPortraitWidth:277 minimumLandScapeHeight:197];
-            cropVC.modalPresentationStyle = UIModalPresentationFullScreen;
-            cropVC.delegate = self;
 
-            cropVC.chooseButtonTitle = @"Send";
-            cropVC.cancelButtonTitle = @"Cancel";
-            cropVC.sourcURL = sourceURL;
-            cropVC.cancelButtonColor = [UIColor colorWithRed:61.0/255.0 green:103.0/255.0 blue:205/255.0 alpha:1];
-            cropVC.chooseButtonColor  = [UIColor colorWithRed:226.0/255.0 green:195.0/255.0 blue:90.0/255.0 alpha:1];
-            cropVC.isGif = YES;
-            [[self getRootVC] presentViewController:cropVC animated:FALSE completion:nil];
-        } else {
         
             [self cropImage:[image fixOrientation]];
-        }
         
     } else {
         ImageResult *imageResult = [self.compression compressImage:[image fixOrientation]  withOptions:self.options];
