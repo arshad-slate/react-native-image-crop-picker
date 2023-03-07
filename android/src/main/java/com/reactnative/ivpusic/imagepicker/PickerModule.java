@@ -81,6 +81,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
     private boolean isCamera = false;
     private String mediaType = "any";
     private boolean showIgCropper = false;
+    private boolean allowGif = true;
+
     private boolean useCropSizeAsOriginalImageSize = false;
     private boolean multiple = false;
     private boolean includeBase64 = false;
@@ -131,6 +133,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
     private void setConfiguration(final ReadableMap options) {
         showIgCropper = options.hasKey("showIgCropper") ? options.getBoolean("showIgCropper") : false;
+        allowGif = options.hasKey("allowGif") ? options.getBoolean("allowGif") : true;
+
         useCropSizeAsOriginalImageSize = options.hasKey("useCropSizeAsOriginalImageSize") ? options.getBoolean("useCropSizeAsOriginalImageSize") : false;
         mediaType = options.hasKey("mediaType") ? options.getString("mediaType") : "any";
         multiple = options.hasKey("multiple") && options.getBoolean("multiple");
@@ -376,10 +380,10 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
             if (cropping || mediaType.equals("photo")) {
                 galleryIntent.setType("image/*");
                 // Disabling this since we need gif also selectable
-//                if (cropping) {
-//                    String[] mimetypes = {"image/jpeg", "image/png"};
-//                    galleryIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
-//                }
+                if (!allowGif) {
+                    String[] mimetypes = {"image/jpeg", "image/png"};
+                    galleryIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+                }
             } else if (mediaType.equals("video")) {
                 galleryIntent.setType("video/*");
             } else {
