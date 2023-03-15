@@ -786,6 +786,9 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
 
                 if (cropping && !mime.contains("gif")) {
                     startCropping(activity, uri);
+                } else if (mime.contains("gif") && !allowGif) {
+                    resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Unsupported media type");
+                    return;
                 } else {
                     try {
                         getAsyncSelection(activity, uri, false);
