@@ -784,9 +784,9 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                     mime = getMimeType(path);
                 } catch (Exception ex) {}
 
-                if (cropping && !mime.contains("gif")) {
+                if (cropping && mime != null && !mime.contains("gif")) {
                     startCropping(activity, uri);
-                } else if (mime.contains("gif") && !allowGif) {
+                } else if (mime != null && mime.contains("gif") && !allowGif) {
                     resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Unsupported media type");
                     return;
                 } else {
@@ -880,7 +880,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                 cropRect.putInt("width", result.getInt("width"));
                 cropRect.putInt("height", result.getInt("height"));
                 result.putMap("cropRect", cropRect);
-                
+
                 resultCollector.notifySuccess(result);
             } else {
                 resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Cannot resolve image url");
