@@ -211,6 +211,7 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     NSMutableOrderedSet *selectedAssets = self.imagePickerController.selectedAssets;
 
     if (selectedAssets.count > 0) {
+        [self.navigationController setToolbarHidden:NO animated:YES];
         NSBundle *bundle = self.imagePickerController.assetBundle;
         NSString *format;
         if (selectedAssets.count > 1) {
@@ -285,6 +286,97 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
         return (self.imagePickerController.maximumNumberOfSelection <= self.imagePickerController.selectedAssets.count);
     }
 
+    return NO;
+}
+
+- (UIView *)toastViewForMessage:(NSString *)message  {
+
+    UIView *wrapperView = [[UIView alloc] initWithFrame:CGRectMake(20, self.view.bounds.size.height - 84, self.view.bounds.size.width - 40, 54)];
+
+    wrapperView.layer.cornerRadius = 10;
+    wrapperView.backgroundColor = [UIColor whiteColor];
+
+   
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.numberOfLines = 1;
+    titleLabel.textAlignment = NSTextAlignmentCenter;
+    titleLabel.lineBreakMode = NSLineBreakByTruncatingTail;
+    titleLabel.textColor = [UIColor redColor];
+    titleLabel.backgroundColor = [UIColor clearColor];
+    titleLabel.alpha = 1.0;
+    titleLabel.text = message;
+    
+    titleLabel.frame = CGRectMake(10, 10, wrapperView.frame.size.width - 20, wrapperView.frame.size.height - 20);
+    [wrapperView addSubview:titleLabel];
+    
+    
+    wrapperView.layer.shadowRadius  = 5.0f;
+    wrapperView.layer.shadowColor   = [UIColor colorWithRed:176.f/255.f green:199.f/255.f blue:226.f/255.f alpha:1.f].CGColor;
+    wrapperView.layer.shadowOffset  = CGSizeMake(0.6f, 5.0f);
+    wrapperView.layer.shadowOpacity = 0.6f;
+    wrapperView.layer.masksToBounds = NO;
+
+    return wrapperView;
+}
+
+- (void) showError: (NSString *) message {
+    
+    UIView *messageView = [self toastViewForMessage:message];
+    
+    [UIView transitionWithView:self.view duration:0.5
+            options:UIViewAnimationOptionCurveEaseIn //change to whatever animation you like
+            animations:^ { [self.navigationController.view addSubview:messageView]; }
+            completion:nil];
+    NSTimeInterval delayInSeconds = 2.0;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        
+        [UIView transitionWithView:self.view duration:0.5
+                options:UIViewAnimationOptionCurveEaseIn //change to whatever animation you like
+                        animations:^ { [messageView removeFromSuperview]; }
+                completion:nil];
+    });
+}
+
+- (BOOL)isMaximumVideoSelectionLimitReached
+{
+    if (self.imagePickerController.maxVideoSelection > 0) {
+        
+        if (self.imagePickerController.selectedAssets &&
+            self.imagePickerController.selectedAssets.count > 0) {
+            int count = 0;
+            for (PHAsset *asset in self.imagePickerController.selectedAssets) {
+                if (asset.mediaType == PHAssetMediaTypeVideo) {
+                    count += 1;
+                }
+            }
+            if (count >= self.imagePickerController.maxVideoSelection) {
+                return YES;
+            } else {
+                return NO;
+            }
+        } else {
+            return NO;
+        }
+    }
+
+    return YES;
+}
+
+- (BOOL) isSelectableVideoAsset: (PHAsset *) asset {
+    
+    if (@available(iOS 9, *)) {
+        NSArray<PHAssetResource *> * resource = [PHAssetResource assetResourcesForAsset:asset];
+        NSNumber *imageSizeByte = [resource.firstObject valueForKey:@"fileSize"];
+        double sizeInMb = imageSizeByte.floatValue/(1024.0*1024.0) ;
+        if (sizeInMb <= self.imagePickerController.maxVideoSize) {
+            return YES;
+        }
+
+    } else {
+        // Fallback on earlier versions
+    }
     return NO;
 }
 
@@ -475,6 +567,7 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     // Video indicator
     if (asset.mediaType == PHAssetMediaTypeVideo) {
         cell.videoIndicatorView.hidden = NO;
+        cell.disabledIndicatorOverlay.hidden = [self isSelectableVideoAsset:asset];
 
         NSInteger minutes = (NSInteger)(asset.duration / 60.0);
         NSInteger seconds = (NSInteger)ceil(asset.duration - 60.0 * (double)minutes);
@@ -490,6 +583,7 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
         }
     } else {
         cell.videoIndicatorView.hidden = YES;
+        cell.disabledIndicatorOverlay.hidden = YES;
     }
 
     // Selection state
@@ -573,8 +667,27 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
     if ([self isAutoDeselectEnabled]) {
         return YES;
     }
+    if ([self isMaximumSelectionLimitReached]) {
+        return NO;;
+    }
+    PHAsset *asset = self.fetchResult[indexPath.item];
+   
+    if(asset.mediaType == PHAssetMediaTypeVideo) {
+        
+        if (![self isSelectableVideoAsset:asset]) {
+            
+            [self showError:@"This item exceeds 500 MB"];
+            return NO;
 
-    return ![self isMaximumSelectionLimitReached];
+        }
+        if ([self isMaximumVideoSelectionLimitReached]) {
+            [self showError:@"Only 1 video allowed at the moment"];
+            return NO;
+        }
+        
+        
+    }
+    return YES;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
@@ -604,11 +717,7 @@ static CGSize CGSizeScale(CGSize size, CGFloat scale) {
 
         if (imagePickerController.showsNumberOfSelectedAssets) {
             [self updateSelectionInfo];
-
-            if (selectedAssets.count == 1) {
-                // Show toolbar
-                [self.navigationController setToolbarHidden:NO animated:YES];
-            }
+            [self.navigationController setToolbarHidden:NO animated:YES];
         }
     } else {
         if ([imagePickerController.delegate respondsToSelector:@selector(qb_imagePickerController:didFinishPickingAssets:)]) {

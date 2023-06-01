@@ -10,7 +10,6 @@
 
 @interface QBAssetCell ()
 
-@property (weak, nonatomic) IBOutlet UIView *overlayView;
 
 @end
 

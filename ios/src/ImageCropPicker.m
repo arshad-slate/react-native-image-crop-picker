@@ -305,6 +305,11 @@ RCT_EXPORT_METHOD(openPicker:(NSDictionary *)options
             imagePickerController.showsNumberOfSelectedAssets = [[self.options objectForKey:@"showsSelectedCount"] boolValue];
             imagePickerController.sortOrder = [self.options objectForKey:@"sortOrder"];
             
+            imagePickerController.maxVideoSize = abs([[self.options objectForKey:@"maxVideoSize"] intValue]);
+            imagePickerController.maxVideoSelection = abs([[self.options objectForKey:@"maxVideoSelection"] intValue]);
+
+            
+            
             NSArray *smartAlbums = [self.options objectForKey:@"smartAlbums"];
             if (smartAlbums != nil) {
                 NSDictionary *albums = @{
@@ -581,7 +586,12 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                 [indicatorView stopAnimating];
                                 [overlayView removeFromSuperview];
                                 [imagePickerController dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
-                                    self.resolve(selections);
+                                    NSMutableArray *selectedAssets = [[NSMutableArray alloc] init];
+                                    for (PHAsset *tmpAssets in assets) {
+                                        [selectedAssets addObject: [selections valueForKey:tmpAssets.localIdentifier]];
+                                    }
+
+                                    self.resolve(selectedAssets);
                                 }]];
                                 return;
                             }

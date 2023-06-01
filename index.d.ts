@@ -382,6 +382,10 @@ declare module "react-native-image-crop-picker" {
          * @default 'MediumQuality'
          */
         compressVideoPreset?: CompressVideoPresets;
+
+        /*Max size of selectable video in MB*/
+        maxVideoSize?: number,
+        maxVideoSelection?: number,
     };
 
     type AnyOptions = Omit<ImageOptions, 'mediaType'> & Omit<VideoOptions, 'mediaType'> & {

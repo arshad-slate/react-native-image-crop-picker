@@ -11,7 +11,9 @@
 @class QBVideoIndicatorView;
 
 @interface QBAssetCell : UICollectionViewCell
+@property (weak, nonatomic) IBOutlet UIView *overlayView;
 
+@property (weak, nonatomic) IBOutlet UIView *disabledIndicatorOverlay;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (weak, nonatomic) IBOutlet QBVideoIndicatorView *videoIndicatorView;
 

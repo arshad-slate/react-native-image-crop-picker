@@ -41,6 +41,9 @@ typedef NS_ENUM(NSUInteger, QBImagePickerMediaType) {
 @property (nonatomic, assign) BOOL allowsMultipleSelection;
 @property (nonatomic, assign) NSUInteger minimumNumberOfSelection;
 @property (nonatomic, assign) NSUInteger maximumNumberOfSelection;
+@property (nonatomic, assign) NSUInteger maxVideoSize;
+@property (nonatomic, assign) NSUInteger maxVideoSelection;
+
 @property (nonatomic, strong) NSString* sortOrder;
 
 @property (nonatomic, copy) NSString *prompt;
