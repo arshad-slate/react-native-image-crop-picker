@@ -8,6 +8,7 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 
 #import "ImageCropPicker.h"
+#import "VideoPreviewViewController.h"
 
 #define ERROR_PICKER_CANNOT_RUN_CAMERA_ON_SIMULATOR_KEY @"E_PICKER_CANNOT_RUN_CAMERA_ON_SIMULATOR"
 #define ERROR_PICKER_CANNOT_RUN_CAMERA_ON_SIMULATOR_MSG @"Cannot run camera on simulator"
@@ -352,9 +353,6 @@ RCT_EXPORT_METHOD(openPicker:(NSDictionary *)options
                 imagePickerController.assetCollectionSubtypes = albumsToShow;
             }
             
-            if ([[self.options objectForKey:@"cropping"] boolValue]) {
-                imagePickerController.mediaType = QBImagePickerMediaTypeImage;
-            } else {
                 NSString *mediaType = [self.options objectForKey:@"mediaType"];
                 
                 if ([mediaType isEqualToString:@"photo"]) {
@@ -364,7 +362,7 @@ RCT_EXPORT_METHOD(openPicker:(NSDictionary *)options
                 } else {
                     imagePickerController.mediaType = QBImagePickerMediaTypeAny;
                 }
-            }
+            
             
             NSMutableOrderedSet *selectedAssets = [[NSMutableOrderedSet alloc] init];
             PHFetchResult *phAssetFetchResult = nil;
@@ -704,13 +702,20 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [indicatorView stopAnimating];
                         [overlayView removeFromSuperview];
-                        [imagePickerController dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
-                            if (video != nil) {
-                                self.resolve(video);
-                            } else {
-                                self.reject(ERROR_CANNOT_PROCESS_VIDEO_KEY, ERROR_CANNOT_PROCESS_VIDEO_MSG, nil);
-                            }
-                        }]];
+                        VideoPreviewViewController *vc = [[VideoPreviewViewController alloc] init];
+                        vc.url = video[@"sourceURL"];
+                        vc.callback = ^() {
+                            [imagePickerController dismissViewControllerAnimated:YES completion:[self waitAnimationEnd:^{
+                                if (video != nil) {
+                                    self.resolve(video);
+                                } else {
+                                    self.reject(ERROR_CANNOT_PROCESS_VIDEO_KEY, ERROR_CANNOT_PROCESS_VIDEO_MSG, nil);
+                                }
+                            }]];
+                            
+                        };
+                        vc.modalPresentationStyle = UIModalPresentationFullScreen;
+                        [[self getRootVC] presentViewController:vc animated:YES completion:^{}];
                     });
                 }];
             } else {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		07048DB02A3D47FD00E6B62E /* VideoPreviewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 07048DAF2A3D47FD00E6B62E /* VideoPreviewViewController.m */; };
 		3400A8161CEB54F3008A0BC7 /* ImageCropPicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 3400A8151CEB54F3008A0BC7 /* ImageCropPicker.m */; };
 		3408F5F11E0DE76F00E97159 /* Compression.m in Sources */ = {isa = PBXBuildFile; fileRef = 3408F5F01E0DE76F00E97159 /* Compression.m */; };
 		34963AB11D6B96A800F9CA2F /* UIImage+Resize.m in Sources */ = {isa = PBXBuildFile; fileRef = 34963A941D6B919800F9CA2F /* UIImage+Resize.m */; };
@@ -24,6 +25,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		07048DAC2A3D47FD00E6B62E /* VideoPreviewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoPreviewViewController.h; sourceTree = "<group>"; };
+		07048DAF2A3D47FD00E6B62E /* VideoPreviewViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoPreviewViewController.m; sourceTree = "<group>"; };
 		3400A8081CEB54A6008A0BC7 /* libimageCropPicker.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libimageCropPicker.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		3400A8141CEB54F3008A0BC7 /* ImageCropPicker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageCropPicker.h; sourceTree = "<group>"; };
 		3400A8151CEB54F3008A0BC7 /* ImageCropPicker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageCropPicker.m; sourceTree = "<group>"; };
@@ -92,6 +95,8 @@
 		34ECC8E3204DEEA90053BBC0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				07048DAC2A3D47FD00E6B62E /* VideoPreviewViewController.h */,
+				07048DAF2A3D47FD00E6B62E /* VideoPreviewViewController.m */,
 				3408F5EF1E0DE76F00E97159 /* Compression.h */,
 				3408F5F01E0DE76F00E97159 /* Compression.m */,
 				3400A8141CEB54F3008A0BC7 /* ImageCropPicker.h */,
@@ -183,6 +188,7 @@
 				3408F5F11E0DE76F00E97159 /* Compression.m in Sources */,
 				34963AB11D6B96A800F9CA2F /* UIImage+Resize.m in Sources */,
 				3400A8161CEB54F3008A0BC7 /* ImageCropPicker.m in Sources */,
+				07048DB02A3D47FD00E6B62E /* VideoPreviewViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
