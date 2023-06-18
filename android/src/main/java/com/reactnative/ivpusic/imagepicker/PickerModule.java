@@ -377,7 +377,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         try {
             final Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
 
-            if (cropping || mediaType.equals("photo")) {
+            if (mediaType.equals("photo")) {
                 galleryIntent.setType("image/*");
                 // Disabling this since we need gif also selectable
                 if (!allowGif) {
@@ -619,6 +619,8 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         if (path.startsWith("http://") || path.startsWith("https://")) {
             throw new Exception("Cannot select remote files");
         }
+
+        String mime = getMimeType(path);
         BitmapFactory.Options original = validateImage(path);
 
         // if compression options are provided image will be compressed. If none options is provided,
@@ -627,11 +629,15 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         String compressedImagePath = compressedImage.getPath();
         BitmapFactory.Options options = validateImage(compressedImagePath);
         long modificationDate = new File(path).lastModified();
-
-        image.putString("path", "file://" + compressedImagePath);
+         if (mime.contains("gif")) {
+             image.putString("path", "file://" + path);
+             image.putString("mime", mime);
+         } else {
+             image.putString("path", "file://" + compressedImagePath);
+             image.putString("mime", options.outMimeType);
+         }
         image.putInt("width", options.outWidth);
         image.putInt("height", options.outHeight);
-        image.putString("mime", options.outMimeType);
         image.putInt("size", (int) new File(compressedImagePath).length());
         image.putString("modificationDate", String.valueOf(modificationDate));
 
@@ -784,7 +790,7 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
                     mime = getMimeType(path);
                 } catch (Exception ex) {}
 
-                if (cropping && mime != null && !mime.contains("gif")) {
+                if (cropping && mime != null && !mime.contains("gif") && !mime.contains("video")) {
                     startCropping(activity, uri);
                 } else if (mime != null && mime.contains("gif") && !allowGif) {
                     resultCollector.notifyProblem(E_NO_IMAGE_DATA_FOUND, "Unsupported media type");
