@@ -55,8 +55,12 @@
         [rightButton setTintColor:[UIColor colorWithRed:239.0/255.0 green:207.0/255.0 blue:95.0/255.0 alpha:1]];
 
         
+        [toolbar setTranslucent:NO];
         [toolbar setBackgroundColor:[UIColor blackColor]];
         [toolbar setTintColor:[UIColor blackColor]];
+        toolbar.barStyle = UIBarStyleBlack;
+        [toolbar setItems:@[leftButton, flex, rightButton]];
+        self.view.backgroundColor = [UIColor blackColor];
         
         [toolbar setItems:@[leftButton, flex, rightButton]];
     } else {
