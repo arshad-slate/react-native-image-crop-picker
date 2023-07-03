@@ -482,8 +482,27 @@ class PickerModule extends ReactContextBaseJavaModule implements ActivityEventLi
         } else {
             String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri
                     .toString());
+
             if (fileExtension != null) {
                 mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
+                if(mimeType == null) {
+                    String path = uri.toString();
+                    int i = path.lastIndexOf('.');
+                    if (i > 0) {
+
+                        String extension = path.substring(i+1);
+
+                        if (extension != null) {
+                            extension = extension.toLowerCase();
+                            if(extension.equals("mp4") || extension.equals("mov")  || extension.equals("quicktime")) {
+                                mimeType = "video/"+extension;
+                            } else {
+                                mimeType = "image/"+extension;
+                            }
+                        }
+                    }
+                }
+
             }
         }
         return mimeType;
